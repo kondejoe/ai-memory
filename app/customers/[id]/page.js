@@ -118,13 +118,21 @@ export default function CustomerProfilePage() {
         )}
 
         {customer.phone && (
-          <a
-            href={`https://wa.me/${customer.phone?.replace(/\D/g, '')}`}
-            target="_blank"
-            className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-xl py-3 transition">
-            <span>💬</span>
-            <span>Open WhatsApp</span>
-          </a>
+          <div className="flex gap-3">
+            <a
+              href={`tel:${customer.phone}`}
+              className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl py-3 transition">
+              <span>📞</span>
+              <span>Call</span>
+            </a>
+            <a
+              href={`https://wa.me/${customer.phone?.replace(/\D/g, '')}`}
+              target="_blank"
+              className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-xl py-3 transition">
+              <span>💬</span>
+              <span>WhatsApp</span>
+            </a>
+          </div>
         )}
 
         <div className="bg-gray-900 rounded-xl p-4">
