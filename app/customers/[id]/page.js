@@ -117,6 +117,16 @@ export default function CustomerProfilePage() {
           </div>
         )}
 
+        {customer.phone && (
+          <a
+            href={`https://wa.me/${customer.phone?.replace(/\D/g, '')}`}
+            target="_blank"
+            className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-xl py-3 transition">
+            <span>💬</span>
+            <span>Open WhatsApp</span>
+          </a>
+        )}
+
         <div className="bg-gray-900 rounded-xl p-4">
           <p className="text-sm font-semibold text-indigo-400 mb-3">AI Follow-up Message</p>
           <button onClick={generateFollowUpMessage} disabled={aiLoading}
