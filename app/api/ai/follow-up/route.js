@@ -1,6 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 export async function POST(request) {
   const { customer } = await request.json()
@@ -20,11 +20,11 @@ Write a natural WhatsApp message (2-3 sentences max).
 Do not use formal language. Be warm and conversational.
 Write the message only, no extra explanation.`
 
-  const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
+  const completion = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
     max_tokens: 300,
     messages: [{ role: 'user', content: prompt }]
   })
 
-  return Response.json({ message: message.content[0].text })
+  return Response.json({ message: completion.choices[0].message.content })
 }
