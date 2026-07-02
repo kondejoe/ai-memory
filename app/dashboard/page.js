@@ -11,13 +11,11 @@ export default function DashboardPage() {
   const [overdueFollowUps, setOverdueFollowUps] = useState([])
   const [recentCustomers, setRecentCustomers] = useState([])
   const [loading, setLoading] = useState(true)
-const [message, setMessage] = 
-  useState('') const supabase = 
-  createClient() const router = 
-  useRouter()
-const [reply, setReply] = useState('') 
+  const supabase = createClient()
+  const router = useRouter()
+
   useEffect(() => {
-const [sending, setSending] = useState(false)    async function loadData() {
+    async function loadData() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
       setUser(user)
