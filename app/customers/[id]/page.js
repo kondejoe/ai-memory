@@ -11,8 +11,10 @@ export default function CustomerProfilePage() {
   const [note, setNote] = useState('')
   const [aiMessage, setAiMessage] = useState('')
   const [aiSummary, setAiSummary] = useState('')
+  const [leadScore, setLeadScore] = useState(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [summaryLoading, setSummaryLoading] = useState(false)
+  const [scoreLoading, setScoreLoading] = useState(false)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
   const router = useRouter()
@@ -69,6 +71,25 @@ export default function CustomerProfilePage() {
     const data = await res.json()
     setAiSummary(data.summary)
     setSummaryLoading(false)
+  }
+
+  async function generateLeadScore() {
+    setScoreLoading(true)
+    setLeadScore(null)
+    const res = await fetch('/api/ai/score', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customer })
+    })
+    const data = await res.json()
+    setLeadScore(data)
+    setScoreLoading(false)
+  }
+
+  function scoreColor(score) {
+    if (score >= 8) return 'text-green-400'
+    if (score >= 5) return 'text-yellow-400'
+    return 'text-red-400'
   }
 
   const statusColors = {
@@ -147,6 +168,22 @@ export default function CustomerProfilePage() {
             </a>
           </div>
         )}
+
+        <div className="bg-gray-900 rounded-xl p-4">
+          <p className="text-sm font-semibold text-orange-400 mb-3">🎯 Lead Score</p>
+          <button onClick={generateLeadScore} disabled={scoreLoading}
+            className="w-full bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white text-sm rounded-xl py-2 transition">
+            {scoreLoading ? 'Scoring...' : '🎯 Score This Lead'}
+          </button>
+          {leadScore && (
+            <div className="mt-3 bg-gray-800 rounded-xl p-3">
+              <p className={`text-4xl font-bold ${scoreColor(leadScore.score)}`}>
+                {leadScore.score}<span className="text-lg text-gray-500">/10</span>
+              </p>
+              <p className="text-sm text-gray-300 mt-1">{leadScore.reason}</p>
+            </div>
+          )}
+        </div>
 
         <div className="bg-gray-900 rounded-xl p-4">
           <p className="text-sm font-semibold text-yellow-400 mb-3">AI Summary</p>
