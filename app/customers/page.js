@@ -7,6 +7,8 @@ import Link from 'next/link'
 export default function CustomersPage() {
   const [customers, setCustomers] = useState([])
   const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [interestFilter, setInterestFilter] = useState('all')
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
@@ -21,16 +23,22 @@ export default function CustomersPage() {
     setLoading(false)
   }
 
-  const filtered = customers.filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    (c.phone && c.phone.includes(search)) ||
-    (c.product && c.product.toLowerCase().includes(search.toLowerCase()))
-  )
+  const filtered = customers.filter(c => {
+    const matchSearch =
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      (c.phone && c.phone.includes(search)) ||
+      (c.product && c.product.toLowerCase().includes(search.toLowerCase()))
+    const matchStatus = statusFilter === 'all' || c.status === statusFilter
+    const matchInterest = interestFilter === 'all' || c.interest_level === interestFilter
+    return matchSearch && matchStatus && matchInterest
+  })
 
   const statusColors = {
     new: 'bg-blue-500', contacted: 'bg-yellow-500',
     follow_up: 'bg-purple-500', won: 'bg-green-500', lost: 'bg-red-500'
   }
+
+  const selectClass = "bg-gray-800 text-white text-sm rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
 
   return (
     <div className="min-h-screen bg-gray-950 text-white pb-24">
@@ -41,12 +49,31 @@ export default function CustomersPage() {
         </Link>
       </div>
 
-      <div className="px-4 py-4">
+      <div className="px-4 py-4 space-y-3">
         <input
           type="text" value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Search by name, phone, product..."
           className="w-full bg-gray-900 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
         />
+        <div className="flex gap-2">
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+            className={selectClass}>
+            <option value="all">All Status</option>
+            <option value="new">New</option>
+            <option value="contacted">Contacted</option>
+            <option value="follow_up">Follow Up</option>
+            <option value="won">Won</option>
+            <option value="lost">Lost</option>
+          </select>
+          <select value={interestFilter} onChange={e => setInterestFilter(e.target.value)}
+            className={selectClass}>
+            <option value="all">All Interest</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <p className="text-xs text-gray-500">{filtered.length} customer{filtered.length !== 1 ? 's' : ''} found</p>
       </div>
 
       <div className="px-4 space-y-2">
@@ -69,9 +96,12 @@ export default function CustomersPage() {
                   </p>
                 )}
               </div>
-              <span className={`text-xs px-2 py-1 rounded-full text-white ${statusColors[c.status]}`}>
-                {c.status}
-              </span>
+              <div className="flex flex-col items-end gap-1">
+                <span className={`text-xs px-2 py-1 rounded-full text-white ${statusColors[c.status]}`}>
+                  {c.status}
+                </span>
+                <span className="text-xs text-gray-500">{c.interest_level}</span>
+              </div>
             </div>
           </Link>
         ))}
