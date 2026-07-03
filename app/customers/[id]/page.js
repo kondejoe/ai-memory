@@ -10,7 +10,9 @@ export default function CustomerProfilePage() {
   const [interactions, setInteractions] = useState([])
   const [note, setNote] = useState('')
   const [aiMessage, setAiMessage] = useState('')
+  const [aiSummary, setAiSummary] = useState('')
   const [aiLoading, setAiLoading] = useState(false)
+  const [summaryLoading, setSummaryLoading] = useState(false)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
   const router = useRouter()
@@ -54,6 +56,19 @@ export default function CustomerProfilePage() {
     const data = await res.json()
     setAiMessage(data.message)
     setAiLoading(false)
+  }
+
+  async function generateSummary() {
+    setSummaryLoading(true)
+    setAiSummary('')
+    const res = await fetch('/api/ai/summary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customer, interactions })
+    })
+    const data = await res.json()
+    setAiSummary(data.summary)
+    setSummaryLoading(false)
   }
 
   const statusColors = {
@@ -119,14 +134,12 @@ export default function CustomerProfilePage() {
 
         {customer.phone && (
           <div className="flex gap-3">
-            <a
-              href={`tel:${customer.phone}`}
+            <a href={`tel:${customer.phone}`}
               className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl py-3 transition">
               <span>📞</span>
               <span>Call</span>
             </a>
-            <a
-              href={`https://wa.me/${customer.phone?.replace(/\D/g, '')}`}
+            <a href={`https://wa.me/${customer.phone?.replace(/\D/g, '')}`}
               target="_blank"
               className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-xl py-3 transition">
               <span>💬</span>
@@ -134,6 +147,19 @@ export default function CustomerProfilePage() {
             </a>
           </div>
         )}
+
+        <div className="bg-gray-900 rounded-xl p-4">
+          <p className="text-sm font-semibold text-yellow-400 mb-3">AI Summary</p>
+          <button onClick={generateSummary} disabled={summaryLoading}
+            className="w-full bg-yellow-600 hover:bg-yellow-500 disabled:opacity-50 text-white text-sm rounded-xl py-2 transition">
+            {summaryLoading ? 'Summarizing...' : '📋 Summarize Customer'}
+          </button>
+          {aiSummary && (
+            <div className="mt-3 bg-gray-800 rounded-xl p-3">
+              <p className="text-sm text-white">{aiSummary}</p>
+            </div>
+          )}
+        </div>
 
         <div className="bg-gray-900 rounded-xl p-4">
           <p className="text-sm font-semibold text-indigo-400 mb-3">AI Follow-up Message</p>
