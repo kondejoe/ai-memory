@@ -10,6 +10,8 @@ export default function DashboardPage() {
   const [todayFollowUps, setTodayFollowUps] = useState([])
   const [overdueFollowUps, setOverdueFollowUps] = useState([])
   const [recentCustomers, setRecentCustomers] = useState([])
+  const [highInterest, setHighInterest] = useState([])
+  const [stats, setStats] = useState({ total: 0, won: 0, lost: 0, follow_up: 0 })
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
   const router = useRouter()
@@ -21,6 +23,9 @@ export default function DashboardPage() {
       setUser(user)
 
       const today = new Date().toISOString().split('T')[0]
+
+      const { data: allCustomers } = await supabase
+        .from('customers').select('*')
 
       const { data: todayData } = await supabase
         .from('customers').select('*')
@@ -36,9 +41,24 @@ export default function DashboardPage() {
         .from('customers').select('*')
         .order('created_at', { ascending: false }).limit(5)
 
+      const { data: highData } = await supabase
+        .from('customers').select('*')
+        .eq('interest_level', 'high')
+        .neq('status', 'won').neq('status', 'lost')
+        .limit(5)
+
+      const all = allCustomers || []
+      setStats({
+        total: all.length,
+        won: all.filter(c => c.status === 'won').length,
+        lost: all.filter(c => c.status === 'lost').length,
+        follow_up: all.filter(c => c.status === 'follow_up').length,
+      })
+
       setTodayFollowUps(todayData || [])
       setOverdueFollowUps(overdueData || [])
       setRecentCustomers(recentData || [])
+      setHighInterest(highData || [])
       setLoading(false)
     }
     loadData()
@@ -61,7 +81,7 @@ export default function DashboardPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-gray-950 text-white pb-24">
       <div className="bg-gray-900 px-4 py-4 flex items-center justify-between">
         <div>
           <h1 className="text-lg font-bold">Sales Memory</h1>
@@ -75,24 +95,33 @@ export default function DashboardPage() {
       </div>
 
       <div className="px-4 py-6 space-y-6">
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-gray-900 rounded-xl p-3 text-center">
-            <p className="text-2xl font-bold text-indigo-400">{todayFollowUps.length}</p>
-            <p className="text-xs text-gray-400 mt-1">Today</p>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-gray-900 rounded-xl p-4">
+            <p className="text-3xl font-bold text-white">{stats.total}</p>
+            <p className="text-xs text-gray-400 mt-1">Total Customers</p>
           </div>
-          <div className="bg-gray-900 rounded-xl p-3 text-center">
-            <p className="text-2xl font-bold text-red-400">{overdueFollowUps.length}</p>
-            <p className="text-xs text-gray-400 mt-1">Overdue</p>
+          <div className="bg-gray-900 rounded-xl p-4">
+            <p className="text-3xl font-bold text-green-400">{stats.won}</p>
+            <p className="text-xs text-gray-400 mt-1">Won</p>
           </div>
-          <div className="bg-gray-900 rounded-xl p-3 text-center">
-            <p className="text-2xl font-bold text-green-400">{recentCustomers.length}</p>
-            <p className="text-xs text-gray-400 mt-1">Recent</p>
+          <div className="bg-gray-900 rounded-xl p-4">
+            <p className="text-3xl font-bold text-purple-400">{stats.follow_up}</p>
+            <p className="text-xs text-gray-400 mt-1">Follow Ups</p>
+          </div>
+          <div className="bg-gray-900 rounded-xl p-4">
+            <p className="text-3xl font-bold text-red-400">{stats.lost}</p>
+            <p className="text-xs text-gray-400 mt-1">Lost</p>
           </div>
         </div>
 
+        {/* Today Follow-ups */}
         {todayFollowUps.length > 0 && (
           <div>
-            <h2 className="text-sm font-semibold text-gray-400 uppercase mb-3">Today's Follow-ups</h2>
+            <h2 className="text-sm font-semibold text-gray-400 uppercase mb-3">
+              📅 Today's Follow-ups ({todayFollowUps.length})
+            </h2>
             <div className="space-y-2">
               {todayFollowUps.map(c => (
                 <Link key={c.id} href={`/customers/${c.id}`}
@@ -112,9 +141,12 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Overdue */}
         {overdueFollowUps.length > 0 && (
           <div>
-            <h2 className="text-sm font-semibold text-red-400 uppercase mb-3">Overdue</h2>
+            <h2 className="text-sm font-semibold text-red-400 uppercase mb-3">
+              🔴 Overdue ({overdueFollowUps.length})
+            </h2>
             <div className="space-y-2">
               {overdueFollowUps.map(c => (
                 <Link key={c.id} href={`/customers/${c.id}`}
@@ -124,7 +156,9 @@ export default function DashboardPage() {
                       <p className="font-semibold">{c.name}</p>
                       <p className="text-sm text-gray-400">{c.product} · {c.follow_up_date}</p>
                     </div>
-                    <span className="text-xs px-2 py-1 rounded-full bg-red-900 text-red-300">overdue</span>
+                    <span className="text-xs px-2 py-1 rounded-full bg-red-900 text-red-300">
+                      overdue
+                    </span>
                   </div>
                 </Link>
               ))}
@@ -132,6 +166,32 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* High Interest */}
+        {highInterest.length > 0 && (
+          <div>
+            <h2 className="text-sm font-semibold text-yellow-400 uppercase mb-3">
+              🔥 Hot Leads ({highInterest.length})
+            </h2>
+            <div className="space-y-2">
+              {highInterest.map(c => (
+                <Link key={c.id} href={`/customers/${c.id}`}
+                  className="block bg-gray-900 border border-yellow-900 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold">{c.name}</p>
+                      <p className="text-sm text-gray-400">{c.product} · {c.budget}</p>
+                    </div>
+                    <span className="text-xs px-2 py-1 rounded-full bg-yellow-900 text-yellow-300">
+                      hot
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recent Customers */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-gray-400 uppercase">Recent Customers</h2>
